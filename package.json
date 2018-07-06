@@ -1,7 +1,7 @@
 {
   "name": "atlas-query-stream",
   "version": "1.0.0",
-  "description": "A query engine for atlas-html-stream which captures information from an html stream without using a DOM.\"",
+  "description": "A query engine for atlas-html-stream which captures information from an html stream without using a DOM.",
   "scripts": {
     "test-server": "mocha --colors --watch --recursive './test/**/*.test.js'",
     "test": "mocha --colors --recursive './test/**/*.test.js'"
