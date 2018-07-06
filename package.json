@@ -6,8 +6,21 @@
     "test-server": "mocha --colors --watch --recursive './test/**/*.test.js'",
     "test": "mocha --colors --recursive './test/**/*.test.js'"
   },
-  "main": "./src/index.js",
-  "keywords": [],
+  "main": "./src/QueryStream.js",
+  "keywords": [
+    "atlassubbed",
+    "parser",
+    "query",
+    "selector",
+    "utils",
+    "utility",
+    "stream",
+    "html",
+    "tags",
+    "text",
+    "nodes",
+    "async"
+  ],
   "author": "atlassubbed <atlassubbed@gmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
