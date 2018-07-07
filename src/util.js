@@ -1,3 +1,5 @@
 const isArr = Array.isArray;
 
-module.exports = { isArr }
+const isFn = fn => typeof fn === "function";
+
+module.exports = { isArr, isFn }

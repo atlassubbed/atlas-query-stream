@@ -2,6 +2,7 @@ const { describe, it } = require("mocha")
 const { expect } = require("chai")
 const { Transform } = require("stream");
 const QueryStream = require("../src/QueryStream");
+const { query } = require("./helpers");
 
 describe("QueryStream", function(){
   it("should throw error if instantiated without query", function(){
