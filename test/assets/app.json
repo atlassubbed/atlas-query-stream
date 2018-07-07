@@ -46,7 +46,9 @@
   },
   {
     "name": "li",
-    "data": {}
+    "data": {
+      "style": "color: blue;"
+    }
   },
   {
     "text": "Home"

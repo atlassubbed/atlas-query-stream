@@ -16,12 +16,24 @@ class NodeStream extends Readable {
 }
 
 // query an html node stream and return a list of results
-const query = queries => {
+const query = (queries, cb) => {
   const nodeStream = new NodeStream();
   const queryStream = new QueryStream(...queries);
   const results = [];
-  nodeStream.pipe(queryStream).on("data", r => results.push(r));
-  return results;
+  nodeStream.pipe(queryStream)
+    .on("data", r => results.push(r))
+    .on("end", () => cb(results))
 }
 
-module.exports = { query }
+const nodeStats = {
+  nodeIndices: [],
+  textIndices: [],
+};
+
+for (let i = 0; i < sourceNodes.length; i++){
+  const { text, data, name } = sourceNodes[i];
+  if (data || text) nodeStats.nodeIndices.push(i);
+  if (text) nodeStats.textIndices.push(i);
+}
+
+module.exports = { query, nodeStats }
