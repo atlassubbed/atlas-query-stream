@@ -84,13 +84,13 @@ const doctypeQueryEfficient = ({name, data}) => {
   }
 }
 
-const log = d => JSON.stringify(d);
+const str = d => JSON.stringify(d);
 file
   .on("data", d => console.log(`streamed ${d.length} bytes`))
   .pipe(parser)
-  .on("data", d => console.log(`parsed ${log(d)}`))
+  .on("data", d => console.log(`parsed ${str(d)}`))
   .pipe(new QueryStream(docQuery))
-  .on("data", d => console.log(`queried ${log(d)}`))
+  .on("data", d => console.log(`queried ${str(d)}`))
   .on("end", () => console.log("ended querying"))
 
 // streamed 5 bytes
