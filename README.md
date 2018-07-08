@@ -165,7 +165,7 @@ file
   })
 ```
 
-There is much more possible with nested queries: you can nest basic queries inside recursive queries, you can nest many levels of queries -- do whatever you gotta do for your use case.
+There is much more possible with nested queries: you can nest basic queries inside of recursive queries, you can nest many levels of queries -- do whatever you gotta do for your use case.
 
 ## caveats
 
