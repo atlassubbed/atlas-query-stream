@@ -144,7 +144,7 @@ One thing to note here is that the query is wrapped in an `Array` literal, `[]`.
 
 Basic and recursive queries are the building blocks for all other queries. A *nested* query is a query which returns another query. The child query is called a *subquery*. Let's continue with the previous example, except this time, assume that our html snippet is part of a much larger document which contains thousands of anchor tags. In this case, we only want *my* package urls! The query in the example above would return urls for *every* anchor tag. Let's fix it using a nested query:
 
-```
+```javascript
 ...
 // use a nested query to limit the range of a recursive subquery
 const onlyAtlassubbedUrlQuery = ({data}) => {
