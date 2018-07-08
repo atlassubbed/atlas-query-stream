@@ -203,3 +203,13 @@ const betterQuery = ({data}) => {
 ```
 
 This query will limit the scope of your `liQuery` to the subtree of `<ul id="1">`. In other words, the `liQuery` is only executed on the 20 `li` tags inside of the target `ul`.
+
+## todo
+
+#### query return values
+
+Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if a particular falsy return value told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem if you know the document you're scraping *a priori*.
+
+#### subtrees and substrings
+
+Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code.
