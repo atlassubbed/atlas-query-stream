@@ -14,7 +14,9 @@ npm install --save atlas-query-stream
 
 ## why
 
-I want to be able to query html files without needing the entire file in memory. Using a DOM-based query engine would force me to construct my html tree in memory before querying it. This package lets you define recursive crawlers that fetch information from a continuous stream of html nodes. Once you find the information you are looking for, you can end the html stream immediately without reading the rest of the file. You can use [atlas-html-stream](https://github.com/atlassubbed/atlas-html-stream#readme) to obtain a continuous stream of html nodes from a file.
+I've used libraries like cheerio, but I found their APIs to be large and counter-intuitive, forcing me to look up syntax for a plethora of functions and types. Using a DOM-based query engine would also force me to construct my html tree in memory before querying it, which is a no-go for large documents and html streaming.
+
+I want to be able to query html files intuitively without needing the entire file in memory. This package lets you define recursive crawlers that fetch information from a continuous stream of html nodes. Once you find the information you are looking for, you can end the html stream immediately without reading the rest of the file. You can use [atlas-html-stream](https://github.com/atlassubbed/atlas-html-stream#readme) to obtain a continuous stream of html nodes from a file.
 
 ## introduction
 
