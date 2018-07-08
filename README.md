@@ -69,7 +69,7 @@ file
 
 Before we talk about recursive queries, let's fix the example above. My favorite part about streams is that you can shut off the water whenever you want. Suppose we have a 1MB html file and all we want to do is see what the `DOCTYPE` is. In the example above, we inadvertently read the entire html file! Instead, let's stop reading the file *as soon as* we find out what the `DOCTYPE` is. For illustrative purposes, we'll be logging the data we pipe through each stream:
 
-```
+```javascript
 ...
 const { createReadStream } = require("fs")
 const optsChunkSize = { highWaterMark: 5 }
