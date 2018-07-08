@@ -15,7 +15,7 @@ module.exports = class QueryStream extends Transform {
         if (job._lev > levs[job._tag]) continue;
         res = ((recur = isArr(job)) ? job[0] : job)(node);
         if (!res) {next.push(job); continue}
-        if (recur) next.push(job);
+        recur && next.push(job)
         if (!isQuery(res) || isText(node)) this.push(res);
         else res._tag = tag, res._lev = 1+levs[tag], next.push(res);
       }
