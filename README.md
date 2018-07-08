@@ -227,7 +227,7 @@ Since nested queries depend on the existence of closing tags (i.e. well formatte
 
 #### subtrees and substrings
 
-Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes, or call queries with a second `isDone` boolean when their subtree expires.
+Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes, or call queries without a node (or with *their* closing subtree node) when their subtree expires.
 
 #### plugins
 
