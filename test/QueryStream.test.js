@@ -2,12 +2,13 @@ const { describe, it } = require("mocha")
 const { expect } = require("chai")
 const { Transform } = require("stream");
 const QueryStream = require("../src/QueryStream");
-const { query, nodeStats } = require("./helpers");
+const { query, getTextIndices, getNodeIndices } = require("./helpers");
+const parallel = require("atlas-parallel");
 
-const { 
-  nodeIndices: { length: numberOfNodes },
-  textIndices: { length: numberOfTextNodes }
-} = nodeStats;
+const textIndices = getTextIndices();
+const nodeIndices = getNodeIndices();
+const numberOfNodes = nodeIndices.length;
+const numberOfTextNodes = textIndices.length;
 
 describe("QueryStream", function(){
   it("should throw error if instantiated without query", function(){
@@ -17,67 +18,143 @@ describe("QueryStream", function(){
     const queries = new QueryStream(() => {});
     expect(queries).to.be.an.instanceOf(Transform)
   })
-  it("should run a non-recursive query until it finds the first result", function(done){
-    let calledQuery = 0;
-    const indexOfFirstResult = nodeStats.textIndices[0]
-    const textQuery = node => {
-      calledQuery++;
-      if (node.text) return "found";
-    }
-    query([textQuery], res => {
-      expect(calledQuery).to.equal(indexOfFirstResult+1)
-      expect(res.length).to.equal(1);
-      expect(res[0]).to.equal("found")
-      done();
-    });
-  })
-  it("should run a recursive query indefinitely", function(done){
-    let calledQuery = 0;
-    const recursiveTextQuery = [node => {
-      calledQuery++;
-      if (node.text) return "found";
-    }]
-    query([recursiveTextQuery], res => {
-      expect(calledQuery).to.equal(numberOfNodes)
-      expect(res.length).to.equal(numberOfTextNodes);
-      res.forEach(r => expect(r).to.equal("found"))
-      done();
-    });
-  })
-  it("should run multiple queries", function(done){
-    let calledQ1 = 0, calledQ2 = 0
-    const q1 = node => ++calledQ1 === 3;
-    const q2 = [({text}) => ++calledQ2 && !!text]
-    query([q1,q2], res => {
-      expect(calledQ1).to.equal(3)
-      expect(calledQ2).to.equal(numberOfNodes)
-      expect(res.length).to.equal(numberOfTextNodes+1);
-      res.forEach(r => expect(r).to.be.true)
-      done()
+  describe("non-recursive queries", function(){
+    it("should not support nested queries on text nodes", function(testDone){
+      const indexOfFirstTextNode = textIndices[0]
+      const truthyValues = [true, 5, {}, [], () => {}, "str", new Date(), /reg/];
+      parallel(truthyValues.map(val => done => {
+        let calledCount = 0;
+        query([({text}) => {
+          calledCount++;
+          return text && val;
+        }], res => {
+          expect(res.length).to.equal(1);
+          expect(res[0]).to.deep.equal(val);
+          expect(calledCount).to.equal(indexOfFirstTextNode+1);
+          done()
+        })
+      }), () => testDone())
+    })
+    it("should not be executed after finding a truthy result", function(testDone){
+      const truthyResults = [true, 5, {}, "str", new Date(), /reg/];
+      parallel(truthyResults.map(val => done => {
+        let calledCount = 0;
+        query([node => {
+          calledCount++;
+          return val;
+        }], res => {
+          expect(res.length).to.equal(1);
+          expect(res[0]).to.deep.equal(val);
+          expect(calledCount).to.equal(1);
+          done();
+        })
+      }), () => testDone())
+    })
+    it("should continue running if it returns a falsy value", function(testDone){
+      const falsyResults = [undefined, NaN, "", 0, false, null, -0, ''];
+      parallel(falsyResults.map(val => done => {
+        let calledCount = 0;
+        query([node => {
+          calledCount++;
+          return val;
+        }], res => {
+          expect(res.length).to.equal(0);
+          expect(calledCount).to.equal(numberOfNodes);
+          done();
+        })
+      }), () => testDone())
+    })
+    it("should run a non-recursive child query on at most every subnode of the matching node", function(done){
+      let calledSubqueryCount = 0;
+      query([({name}) => {
+        if (name === "head") return node => {
+          calledSubqueryCount++;
+        }
+      }], res => {
+        expect(res.length).to.equal(0);
+        expect(calledSubqueryCount).to.equal(2);
+        done()
+      })
+    })
+    it("should always run a recursive child query on every subnode of the matching node", function(done){
+      let calledSubqueryCount = 0;
+      query([({name}) => {
+        if (name === "head") return [node => ++calledSubqueryCount]
+      }], res => {
+        expect(res.length).to.equal(2);
+        expect(calledSubqueryCount).to.equal(2);
+        expect(res).to.deep.equal([1,2])
+        done()
+      })
     })
   })
-  it("should continue running a query as long as it returns a falsy value", function(done){
-    const falsyValues = [undefined, NaN, "", 0, false, null, -0, '']
-    const calledCount = falsyValues.map(val => 0)
-    const queries = falsyValues.map((val,i) => () => {
-      calledCount[i]++
-      return val
+  describe("recursive queries", function(){
+    it("should not support nested queries on text nodes", function(testDone){
+      const indexOfFirstTextNode = textIndices[0]
+      const truthyValues = [true, 5, {}, [], () => {}, "str", new Date(), /reg/];
+      parallel(truthyValues.map(val => done => {
+        let calledCount = 0;
+        query([[({text}) => {
+          calledCount++;
+          return text && val;
+        }]], res => {
+          expect(res.length).to.equal(numberOfTextNodes);
+          res.forEach(r => expect(r).to.deep.equal(val))
+          expect(calledCount).to.equal(numberOfNodes);
+          done()
+        })
+      }), () => testDone())
     })
-    query(queries, res => {
-      expect(res.length).to.equal(0);
-      calledCount.forEach(c => expect(c).to.equal(numberOfNodes))
-      done()
+    it("should be executed on every node after finding a truthy result", function(testDone){
+      const truthyResults = [true, 5, {}, "str", new Date(), /reg/];
+      parallel(truthyResults.map(val => done => {
+        let calledCount = 0;
+        query([[node => {
+          calledCount++;
+          return val;
+        }]], res => {
+          expect(res.length).to.equal(numberOfNodes);
+          res.forEach(r => expect(r).to.deep.equal(val))
+          expect(calledCount).to.equal(numberOfNodes);
+          done();
+        })
+      }), () => testDone())
+    })
+    it("should continue running if it returns a falsy value", function(testDone){
+      const falsyResults = [undefined, NaN, "", 0, false, null, -0, ''];
+      parallel(falsyResults.map(val => done => {
+        let calledCount = 0;
+        query([[node => {
+          calledCount++;
+          return val;
+        }]], res => {
+          expect(res.length).to.equal(0);
+          expect(calledCount).to.equal(numberOfNodes);
+          done();
+        })
+      }), () => testDone())
+    })
+    it("should run a non-recursive child query on at most every subnode of all matching nodes", function(done){
+      // calledChildCount should equal the numberOfChildNodes of the matching node
+      // test with a child query which returns false.
+    })
+    it("should always run a recursive child query on every subnode of all matching nodes", function(done){
+      // calledChildCount should equal the numberOfChildNodes of the matching node
+      // test with a child query which returns true.
+    })
+  })
+  describe("multiple queries", function(){
+    it("should run all the provided queries", function(done){
+      let calledQ1 = 0, calledQ2 = 0
+      const q1 = () => ++calledQ1 === 3;
+      const q2 = [() => !!++calledQ2]
+      query([q1,q2], res => {
+        expect(calledQ1).to.equal(3)
+        expect(calledQ2).to.equal(numberOfNodes)
+        expect(res.length).to.equal(numberOfNodes+1);
+        res.forEach(r => expect(r).to.be.true)
+        done()
+      })
     })
   })
 })
-
-
-
-/* Input: open, close, and text nodes from a tree-markup parser
- * Output: Results form the queries, which are arbitrary objects.
- * Arguments: Each argument is a query to run on the input stream.
- *   Query: A function which returns either another query, results, or falsy.
- *     Function: Runs until it gets a single result
- *     Array[Function]: Runs indefinitely, returning potentially many results.
- *   
- */

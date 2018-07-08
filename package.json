@@ -24,6 +24,7 @@
   "author": "atlassubbed <atlassubbed@gmail.com>",
   "license": "Apache-2.0",
   "devDependencies": {
+    "atlas-parallel": "^1.0.1",
     "chai": "^4.1.2",
     "mocha": "^5.2.0"
   },

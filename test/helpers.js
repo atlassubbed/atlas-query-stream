@@ -25,15 +25,20 @@ const query = (queries, cb) => {
     .on("end", () => cb(results))
 }
 
-const nodeStats = {
-  nodeIndices: [],
-  textIndices: [],
-};
-
-for (let i = 0; i < sourceNodes.length; i++){
-  const { text, data, name } = sourceNodes[i];
-  if (data || text) nodeStats.nodeIndices.push(i);
-  if (text) nodeStats.textIndices.push(i);
+const getTextIndices = () => {
+  let indices = [];
+  for (let i = 0; i < sourceNodes.length; i++)
+    if (sourceNodes[i].text) indices.push(i);
+  return indices;
 }
 
-module.exports = { query, nodeStats }
+const getNodeIndices = () => {
+  let indices = [];
+  for (let i = 0; i < sourceNodes.length; i++){
+    const { data, text } = sourceNodes[i]
+    if (data || text) indices.push(i);
+  }
+  return indices;
+}
+
+module.exports = { query, getTextIndices, getNodeIndices }

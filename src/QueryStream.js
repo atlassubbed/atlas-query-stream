@@ -24,7 +24,7 @@ module.exports = class QueryStream extends Transform {
         else if (isArr(res) || isFn(res)){
           cur[id] = cur[id] || [], findMany && cur[id].push(job)
           res.id = id, nextJobs.push(res)
-        } else findMany && (cur[id] = cur[id] || []).push(job), this.push(res)
+        } else findMany && nextJobs.push(job), this.push(res)
       }
       jobs = nextJobs
     }
