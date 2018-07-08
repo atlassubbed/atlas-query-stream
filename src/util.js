@@ -1,5 +1,9 @@
 const isArr = Array.isArray;
 
-const isFn = fn => typeof fn === "function";
+const isQuery = res => isArr(res) || typeof res === "function";
 
-module.exports = { isArr, isFn }
+const isText = node => "text" in node;
+
+const isNew = node => "data" in node || isText(node)
+
+module.exports = { isArr, isQuery, isNew, isText }

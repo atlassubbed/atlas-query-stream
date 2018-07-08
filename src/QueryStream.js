@@ -1,32 +1,28 @@
 const { Transform } = require("stream");
-const { isArr, isFn } = require("./util");
+const { isArr, isQuery, isNew, isText } = require("./util");
 
 module.exports = class QueryStream extends Transform {
   constructor(...queries){
     super({objectMode: true})
     if (!queries.length) 
       throw new Error("requires at least one query");
-    const cur = {}, levs = [];
-    let jobs = queries, id = 0;
+    let jobs = queries, name, levs = {};
     this.query = node => {
-      if (node.data) levs.push(++id)
-      else if (node.name) {
-        let top, topJobs;
-        if (topJobs = cur[top = levs.pop()]) jobs.push(...topJobs);
-        return (cur[top] = null);
+      if (name = node.name) levs[name] = levs[name] || 0;
+      if (!isNew(node)) return levs[name]--
+      let job, res, next = [], recur;
+      while(job = jobs.pop()){
+        if (job._lev > levs[job._name]) continue;
+        res = ((recur = isArr(job)) ? job[0] : job)(node);
+        if (!res) next.push(job);
+        else if (!isQuery(res) || isText(node))
+          recur && next.push(job), this.push(res);
+        else {
+          res._name = name, res._lev = levs[name] + 1
+          recur && next.push(job), next.push(res)
+        }
       }
-      let job, res, nextJobs = [], findMany;
-      while (job = jobs.pop()){
-        if (job.id && !cur[job.id]) continue;
-        findMany = isArr(job), res = findMany ? job[0](node) : job(node)
-        if (!res) nextJobs.push(job)
-        else if (node.text) findMany && nextJobs.push(job), this.push(res)
-        else if (isArr(res) || isFn(res)){
-          cur[id] = cur[id] || [], findMany && cur[id].push(job)
-          res.id = id, nextJobs.push(res)
-        } else findMany && nextJobs.push(job), this.push(res)
-      }
-      jobs = nextJobs
+      name && levs[name]++, jobs = next;
     }
   }
   _transform(node, encoding, done){

@@ -1,9 +1,9 @@
 const { describe, it } = require("mocha")
 const { expect } = require("chai")
 const { Transform } = require("stream");
+const parallel = require("atlas-parallel");
 const QueryStream = require("../src/QueryStream");
 const { query, getTextIndices, getNodeIndices } = require("./helpers");
-const parallel = require("atlas-parallel");
 
 const textIndices = getTextIndices();
 const nodeIndices = getNodeIndices();
@@ -135,6 +135,16 @@ describe("QueryStream", function(){
       }), () => testDone())
     })
     it("should run a non-recursive child query on at most every subnode of all matching nodes", function(done){
+      let calledSubqueryCount = 0;
+      query([[({name}) => {
+        if (name === "ol") return node => {
+          calledSubqueryCount++;
+        }
+      }]], res => {
+        expect(res.length).to.equal(0);
+        expect(calledSubqueryCount).to.equal(26 + 6 + 6 + 6 + 2);
+        done()
+      })
       // calledChildCount should equal the numberOfChildNodes of the matching node
       // test with a child query which returns false.
     })
