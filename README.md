@@ -167,11 +167,26 @@ file
 
 There is much more possible with nested queries: you can nest basic subqueries inside of recursive queries, you can nest many levels of queries -- do whatever you gotta do for your use case.
 
+#### multiple queries
+
+All the queries you write can be executed on the same query stream:
+
+```javascript
+...
+const queries = require("./queries");
+// all of your queries will run
+const queryStream = new QueryStream(...queries)
+```
+
 ## caveats
 
 #### query return values
 
 If you return an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+
+#### query order
+
+If you're running multiple queries (e.g. `new QueryStream(...queries)`), the order in which they and their subqueries run is set to alternate. This is to avoid using `unshift`. If you are running multiple queries, make sure your queries are pure and do not depend on each other.
 
 #### malformatted html
 
@@ -208,8 +223,19 @@ This query will limit the scope of your `liQuery` to the subtree of `<ul id="1">
 
 #### query return values
 
-Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if a particular falsy return value told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem if you know the document you're scraping *a priori*.
+Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if a particular falsy return value told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem.
 
 #### subtrees and substrings
 
-Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code.
+Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes, or call queries with a second `isDone` boolean when their subtree expires.
+
+#### plugins
+
+Let's say we implement a DOM subtree-generator query. It would be trivial to export the query itself it as a raw plugin, which can then be used like *any* other query:
+
+```javascript
+const { domGenerator } = require("./query-stream-dom-generator");
+const QueryStream = require("atlas-query-stream");
+const engine = new QueryStream(domGenerator)
+...
+```
