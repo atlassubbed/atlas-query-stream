@@ -148,7 +148,7 @@ Basic and recursive queries are the building blocks for all other queries. A *ne
 ...
 // use a nested query to limit the range of a recursive subquery
 const onlyAtlassubbedUrlQuery = ({data}) => {
-  // since ids are unique, we don't need to check the tag name
+  // since html tag ids are unique, we don't need to check the tag name
   if (data.id === "atlassubbed-packages"){
     return urlQuery;
   }
