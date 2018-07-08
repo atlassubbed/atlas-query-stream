@@ -6,23 +6,20 @@ module.exports = class QueryStream extends Transform {
     super({objectMode: true})
     if (!queries.length) 
       throw new Error("requires at least one query");
-    let jobs = queries, name, levs = {};
+    let jobs = queries, tag, levs = {};
     this.query = node => {
-      if (name = node.name) levs[name] = levs[name] || 0;
-      if (!isNew(node)) return levs[name]--
+      if (tag = node.name) levs[tag] = levs[tag] || 0;
+      if (!isNew(node)) return levs[tag]--
       let job, res, next = [], recur;
       while(job = jobs.pop()){
-        if (job._lev > levs[job._name]) continue;
+        if (job._lev > levs[job._tag]) continue;
         res = ((recur = isArr(job)) ? job[0] : job)(node);
-        if (!res) next.push(job);
-        else if (!isQuery(res) || isText(node))
-          recur && next.push(job), this.push(res);
-        else {
-          res._name = name, res._lev = levs[name] + 1
-          recur && next.push(job), next.push(res)
-        }
+        if (!res) {next.push(job); continue}
+        if (recur) next.push(job);
+        if (!isQuery(res) || isText(node)) this.push(res);
+        else res._tag = tag, res._lev = 1+levs[tag], next.push(res);
       }
-      name && levs[name]++, jobs = next;
+      tag && levs[tag]++, jobs = next;
     }
   }
   _transform(node, encoding, done){

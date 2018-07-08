@@ -135,22 +135,38 @@ describe("QueryStream", function(){
       }), () => testDone())
     })
     it("should run a non-recursive child query on at most every subnode of all matching nodes", function(done){
-      let calledSubqueryCount = 0;
+      let parentNodeIndex = 0, subQueryCounts = [];
       query([[({name}) => {
-        if (name === "ol") return node => {
-          calledSubqueryCount++;
+        if (name === "ol") {
+          const i = parentNodeIndex++;
+          return node => {
+            subQueryCounts[i] = (subQueryCounts[i] || 0) + 1;
+          }
         }
       }]], res => {
         expect(res.length).to.equal(0);
-        expect(calledSubqueryCount).to.equal(26 + 6 + 6 + 6 + 2);
+        expect(parentNodeIndex).to.equal(5);
+        expect(subQueryCounts).to.deep.equal([26, 6, 6, 6, 2])
         done()
       })
-      // calledChildCount should equal the numberOfChildNodes of the matching node
-      // test with a child query which returns false.
     })
     it("should always run a recursive child query on every subnode of all matching nodes", function(done){
-      // calledChildCount should equal the numberOfChildNodes of the matching node
-      // test with a child query which returns true.
+      let parentNodeIndex = 0, subQueryCounts = [], expectedCounts = [26, 6, 6, 6, 2];
+      query([[({name}) => {
+        if (name === "ol") {
+          const i = parentNodeIndex++;
+          return [node => {
+            subQueryCounts[i] = (subQueryCounts[i] || 0) + 1;
+            return true;
+          }]
+        }
+      }]], res => {
+        expect(res.length).to.equal(expectedCounts.reduce((p,c)=>p+c,0));
+        res.forEach(r => expect(r).to.be.true)
+        expect(parentNodeIndex).to.equal(5);
+        expect(subQueryCounts).to.deep.equal(expectedCounts)
+        done()
+      })
     })
   })
   describe("multiple queries", function(){
