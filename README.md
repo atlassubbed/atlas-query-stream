@@ -231,12 +231,13 @@ In this example, the query stream will output data for the upvotes for each comm
 Since subqueries are tracked within the scope of their parent node, make sure you use separate instances of a subquery for different scopes. For example, this is fine:
 
 ```javascript
-// works
+// works for a basic query
 const { subquery } = require("./subquery");
 const query = ({data}) => {
-  if (data && data.id === "1"){
-    // this block runs once, since ids are unique
-    // so the subquery will only ever run in one subtree
+  if (name === "div"){
+    // even if there are multiple divs in the tree,
+    // this block runs once, since it's a basic query
+    // thus the subquery will only run in one subtree
     return subquery
   }
 }
