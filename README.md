@@ -180,9 +180,52 @@ const queryStream = new QueryStream(...queries)
 
 ## caveats
 
-#### query return values
+#### returning data
 
-If you return an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+
+#### reusing queries
+
+Since subqueries are tracked within the scope of their parent node, make sure you use separate instances of a subquery for different scopes. For example, this is fine:
+
+```javascript
+// works
+const { subquery } = require("./subquery");
+const query = ({data}) => {
+  if (data && data.id === "1"){
+    // this block runs once, since ids are unique
+    // so the subquery will only ever run in one subtree
+    return subquery
+  }
+}
+```
+
+The following will not work as expected, since we are using the same subquery for potentially multiple different subtrees:
+
+```javascript
+// doesn't work
+const { subquery } = require("./subquery")
+const query = ({name}) => {
+  if (name === "div" || name === "p"){
+    return subquery
+  }
+}
+```
+
+The fix is pretty easy with a factory, which returns a new subquery every time it is called:
+
+```javascript
+// works
+const { makeSubquery } = require("./subquery");
+const query = ({name}) => {
+  if (name === "div" || name === "p"){
+    // this block may run several times
+    return makeSubquery()
+  }
+}
+```
+
+In the above case, each time the `if` block is run, it returns a unique subquery. If you are writing queries, always wrap them in an arrow function so that the caller can use multiple instances if they need to.
 
 #### query order
 
@@ -192,9 +235,9 @@ If you're running multiple queries (e.g. `new QueryStream(...queries)`), the ord
 
 Non-nested queries will work fine if there are missing closing tags. Nested queries won't work as expected if there are missing closing tags in the scope of the subquery, since the query stream uses the nesting level to decide whether or not it should keep running a subquery.
 
-#### performance tips
+## performance tips
 
-The query stream takes a number of queries and calls them on the nodes it receives from an html parser. Basic queries are not executed on any nodes after a match has been found. Recursive queries are executed indefinitely, since they can return potentially many results. Basic queries are preferred over recursive queries. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
+Basic queries are preferred over recursive queries, since they are not executed after finding a result. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
 
 For example, suppose your document has 9,020 `li` tags, but you only need to query the 20 `li` tags inside `<ul id="1">`. The following query could work:
 
@@ -223,7 +266,7 @@ This query will limit the scope of your `liQuery` to the subtree of `<ul id="1">
 
 #### query return values
 
-Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if a particular falsy return value told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem.
+Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if returning `null` told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem.
 
 #### subtrees and substrings
 
@@ -231,11 +274,12 @@ Theoretically, you should be able to write a self-recurring query function which
 
 #### plugins
 
-Let's say we implement a DOM subtree-generator query. It would be trivial to export the query itself it as a raw plugin, which can then be used like *any* other query:
+Let's say we implement a Reddit comment-scraping query. It would be trivial to export a query factory as a raw plugin, which can then be used like *any* other query:
 
 ```javascript
-const { domGenerator } = require("./query-stream-dom-generator");
+const { makeRedditCommentsQuery } = require("./reddit-comments-query");
 const QueryStream = require("atlas-query-stream");
-const engine = new QueryStream(domGenerator)
+const query = makeRedditCommentsQuery()
+const engine = new QueryStream(query)
 ...
 ```
