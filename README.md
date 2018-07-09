@@ -242,7 +242,7 @@ const query = ({data}) => {
 }
 ```
 
-The following will not work as expected, since we are using the same subquery for potentially multiple different subtrees:
+However, the following will not work as expected, since we are using the same subquery for potentially multiple different subtrees:
 
 ```javascript
 // doesn't work
