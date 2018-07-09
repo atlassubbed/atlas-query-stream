@@ -186,13 +186,13 @@ It would be trivial to export a query factory as an npm package, which can then 
 const QueryStream = require("atlas-query-stream");
 // third party query factory, call the module to get an instance of the query
 const pluginQuery = require("some-reddit-comments-query-package")()
-// my query
+// my query which outputs upvote counts for each comment
 const upvotesQuery = require("./reddit-upvotes-query")
 const engine = new QueryStream(upvotesQuery, pluginQuery)
 ...
 ```
 
-In this example, the query stream will output data not only of the upvotes for each comment (from our query), but also of the comment data (`{author, text, url}`) thanks to the plugin.
+In this example, the query stream will output data for the upvotes for each comment (from our query), as well as `{author, text, url}` objects thanks to the plugin.
 
 ## caveats
 
