@@ -67,7 +67,7 @@ file
 
 #### recursive queries
 
-Sometimes, we want to fetch data from multiple tags in an html document, like tabular data or list element data. Suppose we have the following document:
+Other times, we want to fetch data from multiple tags in an html document, like tabular data or list element data. Suppose we have the following document:
 
 ```html
 <div id="atlassubbed-packages">
