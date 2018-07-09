@@ -245,13 +245,14 @@ const query = ({data}) => {
 However, the following will not work as expected, since we are using the same subquery for potentially multiple different subtrees:
 
 ```javascript
-// doesn't work
+// doesn't work for a recursive query
 const { subquery } = require("./subquery")
-const query = ({name}) => {
-  if (name === "div" || name === "p"){
+const query = [({name}) => {
+  if (name === "div"){
+    // this block may run several times
     return subquery
   }
-}
+}]
 ```
 
 The fix is pretty easy with a factory, which returns a new subquery every time it is called:
@@ -259,12 +260,11 @@ The fix is pretty easy with a factory, which returns a new subquery every time i
 ```javascript
 // works
 const { makeSubquery } = require("./subquery");
-const query = ({name}) => {
-  if (name === "div" || name === "p"){
-    // this block may run several times
+const query = [({name}) => {
+  if (name === "div"){
     return makeSubquery()
   }
-}
+}]
 ```
 
 In the above case, each time the `if` block is run, it returns a unique subquery. If you are writing queries, always wrap them in an arrow function so that the caller can use multiple instances if they need to.
