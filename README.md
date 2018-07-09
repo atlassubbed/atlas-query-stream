@@ -65,44 +65,6 @@ file
   })
 ```
 
-#### more efficiently
-
-Before we talk about recursive queries, let's fix the example above. My favorite part about streams is that you can shut off the water whenever you want. Suppose we have a 1MB html file and all we want to do is see what the `DOCTYPE` is. In the example above, we inadvertently read the entire html file! Instead, let's stop reading the file *as soon as* we find out what the `DOCTYPE` is. For illustrative purposes, we'll be logging the data we pipe through each stream:
-
-```javascript
-...
-const { createReadStream } = require("fs")
-const optsChunkSize = { highWaterMark: 5 }
-const file = createReadStream("./index.html", optsChunkSize)
-const parser = new HtmlParser();
-
-// we'll write our query using ES6 fn parameters 
-const doctypeQueryEfficient = ({name, data}) => {
-  if (name === "!DOCTYPE"){
-    parser.end();
-    return {isHtml: "html" in data}
-  }
-}
-
-const str = d => JSON.stringify(d);
-file
-  .on("data", d => console.log(`streamed ${d.length} bytes`))
-  .pipe(parser)
-  .on("data", d => console.log(`parsed ${str(d)}`))
-  .pipe(new QueryStream(docQuery))
-  .on("data", d => console.log(`queried ${str(d)}`))
-  .on("end", () => console.log("ended querying"))
-
-// streamed 5 bytes
-// streamed 5 bytes
-// streamed 5 bytes
-// parsed {"name":"!DOCTYPE","data":{"html":""}}
-// queried {"isHtml":true}
-// ended querying
-```
-
-Every 5 bytes from the beginning of the file are piped to the parser, which emits an html node when it finds one, which triggers the query to execute, which in turn signals the parser to stop accepting incoming data.
-
 #### recursive queries
 
 Sometimes, we want to fetch data from multiple tags in an html document, like tabular data or list element data. Suppose we have the following document:
@@ -167,6 +129,75 @@ file
 
 There is much more possible with nested queries: you can nest basic subqueries inside of recursive queries, you can nest many levels of queries -- do whatever you gotta do for your use case.
 
+## advanced examples
+
+If you've made it to this section, then you already know everything you need to know to start using this library. The following examples and discussion will go over certain cases you may run into.
+
+#### querying fractions of a file
+
+In our very first example, we walked about reading the `DOCTYPE` of an html file, but we inadvertently ended up reading the entire file! Instead, let's stop reading the file *as soon as* we find out what the `DOCTYPE` is. For illustrative purposes, we'll be logging the data we pipe through each stream:
+
+```javascript
+...
+const { createReadStream } = require("fs")
+const optsChunkSize = { highWaterMark: 5 }
+const file = createReadStream("./index.html", optsChunkSize)
+const parser = new HtmlParser();
+
+// we'll write our query using ES6 fn parameters 
+const doctypeQueryEfficient = ({name, data}) => {
+  if (name === "!DOCTYPE"){
+    parser.end();
+    return {isHtml: "html" in data}
+  }
+}
+
+const str = d => JSON.stringify(d);
+file
+  .on("data", d => console.log(`streamed ${d.length} bytes`))
+  .pipe(parser)
+  .on("data", d => console.log(`parsed ${str(d)}`))
+  .pipe(new QueryStream(docQuery))
+  .on("data", d => console.log(`queried ${str(d)}`))
+  .on("end", () => console.log("ended querying"))
+
+// streamed 5 bytes
+// streamed 5 bytes
+// streamed 5 bytes
+// parsed {"name":"!DOCTYPE","data":{"html":""}}
+// queried {"isHtml":true}
+// ended querying
+```
+
+Every 5 bytes from the beginning of the file are piped to the parser, which emits an html node when it finds one, which triggers the query to execute, which in turn signals the parser to stop accepting incoming data. We may also want to consider th edge case where the `DOCTYPE` is not present.
+
+#### writing smarter queries
+
+Basic queries are preferred over recursive queries, since they are not executed after finding a result. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
+
+For example, suppose your document has 9,020 `li` tags, but you only need to query the 20 `li` tags inside `<ul id="1">`. The following query could work:
+
+```javascript
+const liQuery = [node => {
+  if (node.name === "li"){
+    // do some expensive processing and return a result
+  }
+}];
+```
+
+But, it will be executed on your entire node set, and it will do expensive processing on over 9,000 nodes. Instead, nest your recursive `liQuery` query inside of a basic query:
+
+```javascript
+...
+const betterQuery = ({data}) => {
+  if (data && data.id === "1"){
+    return liQuery;
+  }
+}
+```
+
+This query will limit the scope of your `liQuery` to the subtree of `<ul id="1">`. In other words, the `liQuery` is only executed on the 20 `li` tags inside of the target `ul`.
+
 #### multiple queries
 
 All the queries you write can be executed on the same query stream:
@@ -178,7 +209,7 @@ const queries = require("./queries");
 const queryStream = new QueryStream(...queries)
 ```
 
-#### queries as plugins
+#### queries as modular plugins
 
 It would be trivial to export a query factory as an npm package, which can then be imported and used like *any* other query. Let's assume there's a third party Reddit comment-scraping query which emits `{author, text, url}` for each comment on a Reddit page. To use it, all we need to do is import it and pass it into our `QueryStream`:
 
@@ -194,11 +225,6 @@ const engine = new QueryStream(upvotesQuery, pluginQuery)
 
 In this example, the query stream will output data for the upvotes for each comment (from our query), as well as `{author, text, url}` objects thanks to the plugin.
 
-## caveats
-
-#### returning data
-
-If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
 
 #### reusing queries
 
@@ -243,6 +269,12 @@ const query = ({name}) => {
 
 In the above case, each time the `if` block is run, it returns a unique subquery. If you are writing queries, always wrap them in an arrow function so that the caller can use multiple instances if they need to.
 
+## caveats
+
+#### returning data
+
+If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+
 #### query order
 
 If you're running multiple queries (e.g. `new QueryStream(...queries)`), the order in which they and their subqueries run is set to alternate. This is to avoid using `unshift`. If you are running multiple queries, make sure your queries are pure and do not depend on each other.
@@ -250,33 +282,6 @@ If you're running multiple queries (e.g. `new QueryStream(...queries)`), the ord
 #### malformatted html
 
 Non-nested queries will work fine if there are missing closing tags. Nested queries won't work as expected if there are missing closing tags in the scope of the subquery, since the query stream uses the nesting level to decide whether or not it should keep running a subquery.
-
-## performance tips
-
-Basic queries are preferred over recursive queries, since they are not executed after finding a result. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
-
-For example, suppose your document has 9,020 `li` tags, but you only need to query the 20 `li` tags inside `<ul id="1">`. The following query could work:
-
-```javascript
-const liQuery = [node => {
-  if (node.name === "li"){
-    // do some expensive processing and return a result
-  }
-}];
-```
-
-But, it will be executed on your entire node set, and it will do expensive processing on over 9,000 nodes. Instead, nest your recursive `liQuery` query inside of a basic query:
-
-```javascript
-...
-const betterQuery = ({data}) => {
-  if (data && data.id === "1"){
-    return liQuery;
-  }
-}
-```
-
-This query will limit the scope of your `liQuery` to the subtree of `<ul id="1">`. In other words, the `liQuery` is only executed on the 20 `li` tags inside of the target `ul`.
 
 ## todo
 
