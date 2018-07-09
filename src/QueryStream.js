@@ -14,10 +14,10 @@ module.exports = class QueryStream extends Transform {
       while(job = jobs.pop()){
         if (job._lev > levs[job._tag]) continue;
         res = ((recur = isArr(job)) ? job[0] : job)(node);
-        if (!res) {next.push(job); continue}
+        if (!res) {res !== null && next.push(job); continue}
         recur && next.push(job)
         if (!isQuery(res) || isText(node)) this.push(res);
-        else res._tag = tag, res._lev = 1+levs[tag], next.push(res);
+        else res._lev = 1+levs[res._tag = tag], next.push(res);
       }
       tag && levs[tag]++, jobs = next;
     }

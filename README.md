@@ -102,9 +102,27 @@ file
 
 One thing to note here is that the query is wrapped in an `Array` literal, `[]`. This tells the query stream to keep running the query even after it finds the first result.
 
+#### aborting queries
+
+Sometimes you want to write a recursive query, but only need it to return a limited number of results. In this case, we can *abort* the query by returning `null`:
+
+```javascript
+let numResults = 0;
+const firstThreeUrlsQuery = [({name, data}) => {
+  if (numResults === 3) return null;
+  if (name === "a"){
+    numResults++;
+    return data.href;
+  }
+}]
+...
+```
+
+If you don't like keeping query-specific data outside of the query as we did in this example, you should use nested queries and keep information in a top-level query closure.
+
 #### nested queries
 
-Basic and recursive queries are the building blocks for all other queries. A *nested* query is a query which returns another query. The child query is called a *subquery*. Let's continue with the previous example, except this time, assume that our html snippet is part of a much larger document which contains thousands of anchor tags. In this case, we only want *my* package urls! The query in the example above would return urls for *every* anchor tag. Let's fix it using a nested query:
+Basic and recursive queries are the building blocks for all other queries. A *nested* query is a query which returns another query, which we'll call a *subquery*. Let's continue with the previous example, except this time, assume that our html snippet is part of a much larger document which contains thousands of anchor tags. In this case, we only the first three atlassubbed package urls! The query in the example above would return the first three urls for any anchor tag. Let's fix it using a nested query:
 
 ```javascript
 ...
@@ -112,22 +130,21 @@ Basic and recursive queries are the building blocks for all other queries. A *ne
 const onlyAtlassubbedUrlQuery = ({data}) => {
   // since html tag ids are unique, we don't need to check the tag name
   if (data.id === "atlassubbed-packages"){
-    return urlQuery;
+    // start counting our anchor results
+    let numResults = 0;
+    return [({name, data}) => {
+      if (numResults === 3) return null;
+      if (name === "a"){
+        numResults++;
+        return data.href;
+      }
+    }]
   }
 }
-
-file
-  .pipe(new HtmlParser())
-  .pipe(new QueryStream(onlyAtlassubbedUrlQuery))
-  .on("data", url => {
-    console.log(`scraped atlassubbed url: ${url}`)
-  })
-  .on("end", () => {
-    console.log("done reading file")
-  })
+...
 ```
 
-There is much more possible with nested queries: you can nest basic subqueries inside of recursive queries, you can nest many levels of queries -- do whatever you gotta do for your use case.
+There is much more possible with nested queries: you can nest basic subqueries inside of recursive queries, you can nest many levels of queries -- do whatever you need to do for your use case.
 
 ## advanced examples
 
@@ -225,7 +242,6 @@ const engine = new QueryStream(upvotesQuery, pluginQuery)
 
 In this example, the query stream will output data for the upvotes for each comment (from our query), as well as `{author, text, url}` objects thanks to the plugin.
 
-
 #### reusing queries
 
 Since subqueries are tracked within the scope of their parent node, make sure you use separate instances of a subquery for different scopes. For example, this is fine:
@@ -286,10 +302,6 @@ Non-nested queries will work fine if there are missing closing tags. Nested quer
 
 ## todo
 
-#### query return values
-
-Since nested queries depend on the existence of closing tags (i.e. well formatted html), it would be awesome if returning `null` told the engine to "stop running this query, regardless of where it is in the subtree". This could make malformatted html *much* easier to scrape information from, and would solve the "missing `li` closing tags" problem.
-
 #### subtrees and substrings
 
-Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes, or call queries without a node (or with *their* closing subtree node) when their subtree expires.
+Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes when their subtree expires.

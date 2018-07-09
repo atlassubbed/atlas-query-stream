@@ -35,6 +35,18 @@ describe("QueryStream", function(){
         })
       }), () => testDone())
     })
+    it("should not be executed after returning null", function(done){
+      let calledCount = 0;
+      query([node => {
+        if (++calledCount === 3){
+          return null;
+        }
+      }],res => {
+        expect(res.length).to.equal(0);
+        expect(calledCount).to.equal(3);
+        done();
+      })
+    })
     it("should not be executed after finding a truthy result", function(testDone){
       const truthyResults = [true, 5, {}, "str", new Date(), /reg/];
       parallel(truthyResults.map(val => done => {
@@ -50,8 +62,8 @@ describe("QueryStream", function(){
         })
       }), () => testDone())
     })
-    it("should continue running if it returns a falsy value", function(testDone){
-      const falsyResults = [undefined, NaN, "", 0, false, null, -0, ''];
+    it("should continue running if it returns a falsy, non-null value", function(testDone){
+      const falsyResults = [undefined, NaN, "", 0, false, -0, ''];
       parallel(falsyResults.map(val => done => {
         let calledCount = 0;
         query([node => {
@@ -105,6 +117,18 @@ describe("QueryStream", function(){
         })
       }), () => testDone())
     })
+    it("should not be executed after returning null", function(done){
+      let calledCount = 0;
+      query([[node => {
+        if (++calledCount === 3){
+          return null;
+        }
+      }]],res => {
+        expect(res.length).to.equal(0);
+        expect(calledCount).to.equal(3);
+        done();
+      })
+    })
     it("should be executed on every node after finding a truthy result", function(testDone){
       const truthyResults = [true, 5, {}, "str", new Date(), /reg/];
       parallel(truthyResults.map(val => done => {
@@ -120,8 +144,8 @@ describe("QueryStream", function(){
         })
       }), () => testDone())
     })
-    it("should continue running if it returns a falsy value", function(testDone){
-      const falsyResults = [undefined, NaN, "", 0, false, null, -0, ''];
+    it("should continue running if it returns a falsy, non-null value", function(testDone){
+      const falsyResults = [undefined, NaN, "", 0, false, -0, ''];
       parallel(falsyResults.map(val => done => {
         let calledCount = 0;
         query([[node => {
