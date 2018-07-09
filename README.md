@@ -180,15 +180,19 @@ const queryStream = new QueryStream(...queries)
 
 #### queries as plugins
 
-Let's say we implement a Reddit comment-scraping query. It would be trivial to export a query factory as a raw plugin, which can then be used like *any* other query:
+It would be trivial to export a query factory as an npm package, which can then be imported and used like *any* other query. Let's assume there's a third party Reddit comment-scraping query which emits `{author, text, url}` for each comment on a Reddit page. To use it, all we need to do is import it and pass it into our `QueryStream`:
 
 ```javascript
-const { makeRedditCommentsQuery } = require("./reddit-comments-query");
 const QueryStream = require("atlas-query-stream");
-const query = makeRedditCommentsQuery()
-const engine = new QueryStream(query)
+// third party query factory, call the module to get an instance of the query
+const pluginQuery = require("some-reddit-comments-query-package")()
+// my query
+const upvotesQuery = require("./reddit-upvotes-query")
+const engine = new QueryStream(upvotesQuery, pluginQuery)
 ...
 ```
+
+In this example, the query stream will output data not only of the upvotes for each comment (from our query), but also of the comment data (`{author, text, url}`) thanks to the plugin.
 
 ## caveats
 
