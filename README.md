@@ -178,6 +178,18 @@ const queries = require("./queries");
 const queryStream = new QueryStream(...queries)
 ```
 
+#### queries as plugins
+
+Let's say we implement a Reddit comment-scraping query. It would be trivial to export a query factory as a raw plugin, which can then be used like *any* other query:
+
+```javascript
+const { makeRedditCommentsQuery } = require("./reddit-comments-query");
+const QueryStream = require("atlas-query-stream");
+const query = makeRedditCommentsQuery()
+const engine = new QueryStream(query)
+...
+```
+
 ## caveats
 
 #### returning data
@@ -271,15 +283,3 @@ Since nested queries depend on the existence of closing tags (i.e. well formatte
 #### subtrees and substrings
 
 Theoretically, you should be able to write a self-recurring query function which outputs DOM subtrees or html substrings in very few lines of code, although doing so may require us to execute queries on closing nodes, or call queries without a node (or with *their* closing subtree node) when their subtree expires.
-
-#### plugins
-
-Let's say we implement a Reddit comment-scraping query. It would be trivial to export a query factory as a raw plugin, which can then be used like *any* other query:
-
-```javascript
-const { makeRedditCommentsQuery } = require("./reddit-comments-query");
-const QueryStream = require("atlas-query-stream");
-const query = makeRedditCommentsQuery()
-const engine = new QueryStream(query)
-...
-```
