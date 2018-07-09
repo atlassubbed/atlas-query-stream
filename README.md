@@ -169,7 +169,7 @@ file
 // ended querying
 ```
 
-Every 5 bytes from the beginning of the file are piped to the parser, which emits an html node when it finds one, which triggers the query to execute, which in turn signals the parser to stop accepting incoming data. We may also want to consider th edge case where the `DOCTYPE` is not present.
+Every 5 bytes from the beginning of the file are piped to the parser, which emits an html node when it finds one, which triggers the query to execute, which in turn signals the parser to stop accepting incoming data. We may also want to consider the edge case where the `DOCTYPE` is not present.
 
 #### writing smarter queries
 
