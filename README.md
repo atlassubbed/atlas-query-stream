@@ -57,12 +57,8 @@ const doctypeQuery = node => {
 file
   .pipe(new HtmlParser())
   .pipe(new QueryStream(doctypeQuery))
-  .on("data", data => {
-    console.log(`our file ${data.isHtml ? "is" : "isn't"} html`)
-  })
-  .on("end", () => {
-    console.log("done reading file")
-  })
+  .on("data", data => console.log("html?", data.isHtml))
+  .on("end", () => console.log("done reading file"))
 ```
 
 #### recursive queries
@@ -92,12 +88,8 @@ const urlQuery = [({name, data}) => {
 file
   .pipe(new HtmlParser())
   .pipe(new QueryStream(urlQuery))
-  .on("data", url => {
-    console.log(`scraped url: ${url}`)
-  })
-  .on("end", () => {
-    console.log("done reading file")
-  })
+  .on("data", url => console.log(`scraped url: ${url}`))
+  .on("end", () => console.log("done reading file"))
 ```
 
 One thing to note here is that the query is wrapped in an `Array` literal, `[]`. This tells the query stream to keep running the query even after it finds the first result.
