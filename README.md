@@ -190,7 +190,7 @@ Every 5 bytes from the beginning of the file are piped to the parser, which emit
 
 #### writing smarter queries
 
-Basic queries are preferred over recursive queries, since they are not executed after finding a result. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
+Basic queries are preferred over recursive queries, since they are not executed after finding a result. If you *must* use a recursive query, ask yourself whether or not you can nest it inside a basic query to narrow down the html subtree in which it runs. When writing a query, it's best to return a non-null falsy *as soon as* you know the query will fail, so you can avoid doing unecessary processing.
 
 For example, suppose your document has 9,020 `li` tags, but you only need to query the 20 `li` tags inside `<ul id="1">`. The following query could work:
 
@@ -290,7 +290,7 @@ In the above case, each time the `if` block is run, it returns a unique subquery
 
 #### returning data
 
-If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any non-null falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
 
 #### query order
 
