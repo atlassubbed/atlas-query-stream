@@ -254,7 +254,7 @@ end: parsed file
 end: getPageNames query
 ```
 
-As you can see, the `getFirstLink` query stream immediately ends after finding its result, because it was a non-recursive query. The only reason it reads the entire section of the file is so that it can continue getting potential results for the recursive query. Let's see what happens if we run the exact same code, but comment out a few lines:
+As you can see, the `getFirstLink` query stream immediately ends after finding its result, because it was a non-recursive query. The only reason it reads the entire section of the file is so that it can continue getting potential results for the recursive query. Let's see what happens if we run the exact same code, but comment out our recursive query:
 
 ```javascript
 ...
