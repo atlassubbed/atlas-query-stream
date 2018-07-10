@@ -401,7 +401,7 @@ In the above case, each time the `if` block is run, it returns a unique subquery
 
 #### returning data
 
-If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any non-null falsy value will tell the query stream that the current query did not find any result. In this case, the query will be re-run in the (sub)tree in which it was started.
+If a query returns an `Array` or a `Function`, the query stream will assume you are returning another query. Results should be any truthy value except an `Array` or `Function`. If your query needs to return an array of data, return an object with an array field instead: `{results: yourArray}`. Returning any falsy value will tell the query stream that the current query did not find any result. In the case of a return value other than `null`, the query will be re-run in the (sub)tree in which it was started. If `null` is returned, the query will be aborted.
 
 #### query order
 
