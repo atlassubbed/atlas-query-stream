@@ -207,4 +207,16 @@ describe("QueryStream", function(){
       })
     })
   })
+  describe("ephemeral queries", function(){
+    it("should automatically unpipe the stream when there are no queries remaining", function(done){
+      let calledCount = 0, stopAt = 15
+      const ephemeralQuery = () => ++calledCount === stopAt;
+      const source = query([ephemeralQuery], res => {
+        expect(calledCount).to.equal(stopAt)
+        const totalReadFullNodes = getNodeIndices(source.readCount-1).length
+        expect(totalReadFullNodes).to.equal(calledCount)
+        done()
+      })
+    })
+  })
 })

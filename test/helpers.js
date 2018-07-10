@@ -7,22 +7,22 @@ class NodeStream extends Readable {
   constructor(opts={}){
     opts.objectMode = true;
     super(opts);
-    let i = 0;
-    this.getNode = () => sourceNodes[i++] || null;
+    this.readCount = 0;
   }
   _read(){
-    this.push(this.getNode())
+    this.push(sourceNodes[this.readCount++] || null)
   }
 }
 
 // query an html node stream and return a list of results
 const query = (queries, cb) => {
-  const nodeStream = new NodeStream();
+  const nodeStream = new NodeStream({highWaterMark: 1});
   const queryStream = new QueryStream(...queries);
   const results = [];
   nodeStream.pipe(queryStream)
     .on("data", r => results.push(r))
     .on("end", () => cb(results))
+  return nodeStream;
 }
 
 const getTextIndices = () => {
@@ -32,9 +32,9 @@ const getTextIndices = () => {
   return indices;
 }
 
-const getNodeIndices = () => {
+const getNodeIndices = (until=sourceNodes.length) => {
   let indices = [];
-  for (let i = 0; i < sourceNodes.length; i++){
+  for (let i = 0; i < until; i++){
     const { data, text } = sourceNodes[i]
     if (data || text) indices.push(i);
   }
