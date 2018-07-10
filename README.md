@@ -213,7 +213,7 @@ nodeStream
   .on("end", () => console.log(`end: getPageNames query`))
 ```
 
-Since the `gtFirstLink` query will complete roughly halfway into the file, we can expect the stream to end earlier than the `getPageNames` query. The `getPageNames` query is recursive, so it will run until the end of the file. Let's take a look at the output:
+Since the `getFirstLink` query will complete roughly halfway into the file, we can expect the stream to end earlier than the `getPageNames` query. The `getPageNames` query is recursive, so it will run until the end of the file. Let's take a look at the output:
 
 ```
 start: reading file
