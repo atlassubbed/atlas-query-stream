@@ -401,7 +401,7 @@ If a query returns an `Array` or a `Function`, the query stream will assume you 
 
 #### query order
 
-If you're running multiple queries (e.g. `new QueryStream(...queries)`), the order in which they and their subqueries run is set to alternate. This is to avoid using `unshift`. If you are running multiple queries, make sure your queries are pure and do not depend on each other.
+If you're running multiple queries (e.g. `new QueryStream(...queries)`), make sure your queries are pure and do not depend on each other. This means that code inside query `A` should not talk to code inside query `B` where `stream = new QueryStream(A, B)`. Of course, it's perfectly fine for `A` and `B` to store information across their own closures (e.g. for nested queries).
 
 #### malformatted html
 
