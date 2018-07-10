@@ -20,9 +20,13 @@ I want to be able to query html files intuitively without needing the entire fil
 
 ## introduction
 
+#### transient dom
+
+The queries you define are walkers that crawl on a transient DOM, or TDOM. The TDOM is transient in the sense that it doesn't exist all at once. When writing queries, you can pretend it exists and can be crawled.
+
 #### queries
 
-The queries specified here are basic functions which take an open or text node and return either a truthy result, falsy, or another query. Queries may be wrapped in an array to indicate that they are *recursive*. A *basic* query will only be executed until it finds the first result, whereas a recursive query is executed indefinitely, allowing many results to be found.
+The queries specified here are basic functions which take an open or text node and return either a truthy result, falsy, or another query. Queries may be wrapped in an array to indicate that they are *recursive*. A *basic* query will only be executed until it finds the first result, whereas a recursive query is executed indefinitely, allowing many results to be found. You may *abort* queries prematurely by returning `null`. *Nested* queries are queries which return other queries, which is useful for walking deep into the TDOM.
 
 #### input
 
