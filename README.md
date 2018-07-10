@@ -104,7 +104,7 @@ One thing to note here is that the query is wrapped in an `Array` literal, `[]`.
 
 #### aborting queries
 
-Sometimes you want to write a recursive query, but only need it to return a limited number of results. In this case, we can *abort* the query by returning `null`:
+Sometimes you want to write a recursive query, but only need it to return a limited number of results. In this case, we can abort the query by returning `null`:
 
 ```javascript
 let numResults = 0;
@@ -122,7 +122,7 @@ If you don't like keeping query-specific data outside of the query as we did in 
 
 #### nested queries
 
-Basic and recursive queries are the building blocks for all other queries. A *nested* query is a query which returns another query, which we'll call a *subquery*. Let's continue with the previous example, except this time, assume that our html snippet is part of a much larger document which contains thousands of anchor tags. In this case, we only the first three atlassubbed package urls! The query in the example above would return the first three urls for any anchor tag. Let's fix it using a nested query:
+Basic and recursive queries are the building blocks for all other queries. A nested query is a query which returns another query, which we'll call a *subquery*. Let's continue with the previous example, except this time, assume that our html snippet is part of a much larger document which contains thousands of anchor tags. In this case, we only the first three atlassubbed package urls! The query in the example above would return the first three urls for any anchor tag. Let's fix it using a nested query:
 
 ```javascript
 ...
