@@ -169,13 +169,13 @@ describe("QueryStream", function(){
         }
       }]], res => {
         expect(res.length).to.equal(0);
-        expect(parentNodeIndex).to.equal(5);
-        expect(subQueryCounts).to.deep.equal([26, 6, 6, 6, 2])
+        expect(parentNodeIndex).to.equal(4);
+        expect(subQueryCounts).to.deep.equal([18, 6, 6, 2])
         done()
       })
     })
     it("should always run a recursive child query on every subnode of all matching nodes", function(done){
-      let parentNodeIndex = 0, subQueryCounts = [], expectedCounts = [26, 6, 6, 6, 2];
+      let parentNodeIndex = 0, subQueryCounts = [], expectedCounts = [18, 6, 6, 2];
       query([[({name}) => {
         if (name === "ol") {
           const i = parentNodeIndex++;
@@ -187,7 +187,7 @@ describe("QueryStream", function(){
       }]], res => {
         expect(res.length).to.equal(expectedCounts.reduce((p,c)=>p+c,0));
         res.forEach(r => expect(r).to.be.true)
-        expect(parentNodeIndex).to.equal(5);
+        expect(parentNodeIndex).to.equal(4);
         expect(subQueryCounts).to.deep.equal(expectedCounts)
         done()
       })

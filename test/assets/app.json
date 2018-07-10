@@ -80,25 +80,6 @@
     "data": {}
   },
   {
-    "name": "a",
-    "data": {
-      "href": "./contact.html"
-    }
-  },
-  {
-    "text": "Contact"
-  },
-  {
-    "name": "a"
-  },
-  {
-    "name": "li"
-  },
-  {
-    "name": "li",
-    "data": {}
-  },
-  {
     "text": "Posts"
   },
   {
@@ -108,36 +89,8 @@
     "name": "ul"
   },
   {
-    "name": "!--",
-    "data": {}
-  },
-  {
-    "text": " This is our default page "
-  },
-  {
-    "name": "!--"
-  },
-  {
     "name": "p",
     "data": {}
-  },
-  {
-    "text": "This is a query-able HTML document. You can pipe this document to"
-  },
-  {
-    "name": "a",
-    "data": {
-      "href": "https://github.com/atlassubbed/atlas-html-stream"
-    }
-  },
-  {
-    "text": "atlas-html-stream"
-  },
-  {
-    "name": "a"
-  },
-  {
-    "text": "and listen to the output nodes. If you would like to query the output nodes, you can pipe the atlas-html-stream to the QueryStream. All you need to do is instantiate the query stream with the queries you want to perform."
   },
   {
     "name": "ol",
@@ -231,50 +184,6 @@
   },
   {
     "text": "2.9"
-  },
-  {
-    "name": "li"
-  },
-  {
-    "name": "ol"
-  },
-  {
-    "name": "li"
-  },
-  {
-    "name": "li",
-    "data": {}
-  },
-  {
-    "name": "ol",
-    "data": {}
-  },
-  {
-    "name": "li",
-    "data": {}
-  },
-  {
-    "text": "3.2"
-  },
-  {
-    "name": "li"
-  },
-  {
-    "name": "li",
-    "data": {}
-  },
-  {
-    "text": "3.7"
-  },
-  {
-    "name": "li"
-  },
-  {
-    "name": "li",
-    "data": {}
-  },
-  {
-    "text": "3.9"
   },
   {
     "name": "li"
