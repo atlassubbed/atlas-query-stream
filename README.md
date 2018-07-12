@@ -18,11 +18,15 @@ I found cheerio's API to be large and counter-intuitive, forcing me to look up s
 
 I want to be able to query html files intuitively without needing the entire file in memory. This package lets you define recursive crawlers that fetch information from a continuous stream of html nodes. Once you find the information you are looking for, you can end the html stream immediately without reading the rest of the file. The query stream will automatically unpipe itself from the readable's destination once all remaining queries have been popped off the stack. You can use [atlas-html-stream](https://github.com/atlassubbed/atlas-html-stream#readme) to obtain a continuous stream of html nodes from a file.
 
+## performance
+
+For a 25MB file, atlas-query-stream queries outspeed cheerio anywhere from 100-10000x (depending on the situation), in adition to using 100x less memory. [This article goes into more detail on the methods used.](./docs/perf.md)
+
 ## introduction
 
 #### transient dom
 
-The queries you define are walkers that crawl on a transient DOM, or TDOM. The TDOM is transient in the sense that it doesn't exist all at once. When writing queries, you can pretend it exists and can be crawled.
+The queries you define are walkers that crawl on a transient DOM, or TDOM. The TDOM is transient in the sense that it doesn't exist all at once. When writing queries, you can pretend it exists and can be crawled. To better understand what's happening under the hood, [this article illustrates how queries and parsing are parallelized](./docs/stream.md).
 
 #### queries
 
@@ -149,155 +153,6 @@ There is much more possible with nested queries: you can nest basic subqueries i
 ## advanced examples
 
 If you've made it to this section, then you already know everything you need to know to start using this library. The following examples and discussion will go over certain cases you may run into.
-
-#### querying fractions of a file
-
-To better understand how the query stream works, let's try and query [./test/assets/app.html](./test/assets/app.html). We only care about the `ul` at the beginning of the file, which starts at index `113` and ends at index `236`:
-
-```html
-<!-- ./test/assets/app.html -->
-<ul>
-  <li style="color: blue;">Home</li>
-  <li><a href="./about.html">About</a></li>
-  <li>Posts</li>
-</ul>
-```
-
-We want to write two queries:
-
-  1. Get the names of each page in the `ul` "navbar".
-  2. Get the very first link we find.
-
-Let's use two `QueryStreams` for illustrative purposes -- although you can do this with one of them. We'll also be writing a bunch of output so you can see *exactly* what is happening under the hood:
-
-```javascript
-const QueryStream = require("atlas-query-stream")
-const HtmlParser = require("atlas-html-stream");
-const { createReadStream } = require("fs");
-const str = d => JSON.stringify(d);
-
-// create our streams
-const opts = {highWaterMark: 12, start: 113, end: 236};
-const file = createReadStream("./test/assets/app.html", opts);
-const parser = new HtmlParser();
-const getPageNames = new QueryStream([({name}) => {
-  if (name === "li") {
-    return ({text}) => text;
-  }
-}])
-const getFirstLink = new QueryStream(({name, data}) => {
-  if (name === "a"){
-    return data.href
-  }
-})
-
-// begin the job
-console.log("start: reading file")
-file
-  .on("data", d => console.log(`  read: ${d.length} bytes`))
-  .on("end", () => console.log(`end: read file`))
-console.log("start: parsing file")
-const nodeStream = file
-  .pipe(parser)
-  .on("data", d => console.log(`  parsed: ${str(d)}`))
-  .on("end", () => console.log(`end: parsed file`))
-console.log("start: running basic query")
-nodeStream
-  .pipe(getFirstLink)
-  .on("data", d => console.log(`    getFirstLink result: ${str(d)}`))
-  .on("end", () => console.log(`end: getFirstLink query`))
-console.log("start: running recursive query")
-nodeStream
-  .pipe(getPageNames)
-  .on("data", d => console.log(`    getPageNames result: ${str(d)}`))
-  .on("end", () => console.log(`end: getPageNames query`))
-```
-
-Since the `getFirstLink` query will complete roughly halfway into the file, we can expect the stream to end earlier than the `getPageNames` query. The `getPageNames` query is recursive, so it will run until the end of the file. Let's take a look at the output:
-
-```
-start: reading file
-start: parsing file
-start: running basic query
-start: running recursive query
-  read: 12 bytes
-  parsed: {"name":"ul","data":{}}
-  read: 12 bytes
-  read: 12 bytes
-  parsed: {"name":"li","data":{"style":"color: blue;"}}
-  read: 12 bytes
-  parsed: {"text":"Home"}
-    getPageNames result: "Home"
-  parsed: {"name":"li"}
-  read: 12 bytes
-  parsed: {"name":"li","data":{}}
-  read: 12 bytes
-  read: 12 bytes
-  parsed: {"name":"a","data":{"href":"./about.html"}}
-    getFirstLink result: "./about.html"
-end: getFirstLink query
-  read: 12 bytes
-  parsed: {"text":"About"}
-    getPageNames result: "About"
-  parsed: {"name":"a"}
-  parsed: {"name":"li"}
-  read: 12 bytes
-  parsed: {"name":"li","data":{}}
-  read: 12 bytes
-  parsed: {"text":"Posts"}
-    getPageNames result: "Posts"
-  parsed: {"name":"li"}
-  read: 4 bytes
-  parsed: {"name":"ul"}
-end: read file
-end: parsed file
-end: getPageNames query
-```
-
-As you can see, the `getFirstLink` query stream immediately ends after finding its result, because it was a non-recursive query. The only reason it reads the entire section of the file is so that it can continue getting potential results for the recursive query. Let's see what happens if we run the exact same code, but comment out our recursive query:
-
-```javascript
-...
-// begin the job
-console.log("start: reading file")
-file
-  // .on("data", d => console.log(`  read: ${d.length} bytes`))
-  .on("end", () => console.log(`end: read file`))
-console.log("start: parsing file")
-const nodeStream = file
-  .pipe(parser)
-  .on("data", d => console.log(`  parsed: ${str(d)}`))
-  .on("end", () => console.log(`end: parsed file`))
-console.log("start: running basic query")
-nodeStream
-  .pipe(getFirstLink)
-  .on("data", d => console.log(`    getFirstLink result: ${str(d)}`))
-  .on("end", () => console.log(`end: getFirstLink query`))
-// console.log("start: running recursive query")
-// nodeStream
-//   .pipe(getPageNames)
-//   .on("data", d => console.log(`    getPageNames result: ${str(d)}`))
-//   .on("end", () => console.log(`end: getPageNames query`))
-```
-
-We've commented out the entire recursive query, as well as our event listener which logs the bytes read from the file. Remember, node.js will continue to pipe something as long as you are listening for the data. Let's look at the output:
-
-```
-start: reading file
-start: parsing file
-start: running basic query
-  parsed: {"name":"ul","data":{}}
-  parsed: {"name":"li","data":{"style":"color: blue;"}}
-  parsed: {"text":"Home"}
-  parsed: {"name":"li"}
-  parsed: {"name":"li","data":{}}
-  parsed: {"name":"a","data":{"href":"./about.html"}}
-    getFirstLink result: "./about.html"
-end: getFirstLink query
-end: read file
-```
-
-This time, the file stops streaming data to the parser as soon as the query returns its result. There's no need to continue reading and parsing the file if the query stream no longer has any queries on its stack.
 
 #### writing smarter queries
 
