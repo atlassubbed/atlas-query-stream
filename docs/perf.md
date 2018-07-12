@@ -89,7 +89,7 @@ fillTemplate(makeMatrices(50000, 3))
 
 ### 2. write queries to test
 
-Now we have a huge file which we can parse and query. Let's write a cheerio query and an atlas-query-stream query which find the i<sup>th</sup> 3x2 matrix in the file, and outputs data in numerical form:
+Now we have a huge file which we can parse and query. Let's write a cheerio query and an atlas-query-stream query which find the i<sup>th</sup> 3x2 matrix in the file, and outputs the matrix in numerical form:
 
 ```javascript
 // tell cheerio to find the i-th 3x2 matrix:
