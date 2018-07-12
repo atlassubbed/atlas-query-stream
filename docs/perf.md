@@ -1,5 +1,7 @@
 # atlas-query-stream vs cheerio
 
+I initially tried the queries below with a 40MB file, but cheerio's memory usage caused node.js to crash due to a heap allocation failure. Here we'll be making a 25MB file instead.
+
 ## preface
 
 One way to scrape HTML is to parse it, build a DOM, then provide useful inspection utils for the caller. This is what cheerio does. This requires you read the html and construct a DOM before the caller can do anything -- not good when scanning large files.
