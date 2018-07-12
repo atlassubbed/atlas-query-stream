@@ -124,7 +124,7 @@ end: parsed file
 end: getPageNames query
 ```
 
-As you can see, the `getFirstLink` query stream immediately ends after finding its result, because it is a non-recursive query. The only reason it reads the entire section of the file is so that it can continue getting potential results for the recursive query, which is still an active listener on the parser.
+As you can see, the `getFirstLink` query stream immediately ends after finding its result, because it is a non-recursive query. The only reason the parser reads the entire section of the file is so that it can continue getting potential results for the recursive query, which is still an active listener on the parser.
 
 ### 3. commenting out the recursive query
 
@@ -177,6 +177,6 @@ This time, the file stops streaming data to the parser as soon as the query retu
 
 `QueryStream` is a stream, not a DOM generator -- nonetheless, it lets you crawl a DOM. Each query paints out a very particular path in the DOM defined by you (usually a subtree of the entire DOM). For all intents and purposes, this path of the DOM exists in the closures defined by the query.
 
-In our case, there's no reason to parse the file after we've fully parsed the very first `ul` in the file, since all the information we care about is inside the first `ul`. Similarly, if we aren't interested in `pageNames`, there's no reason to fully parse the first `ul` if we've already found the first `a` tag inside the `ul`. 
+In our case, there's no reason to parse the file after we've fully parsed the very first `ul` in the file, since all the information we care about is inside the first `ul`. Similarly, if we aren't interested in `getPageNames`, there's no reason to fully parse the first `ul` if we've already found the first `a` tag inside the `ul`. 
 
 The query stream only *unpipes* itself from its sources when it's done establishing the outcome of every query it was given. Node.js automatically shuts down a source when there are no remaining data listeners.
