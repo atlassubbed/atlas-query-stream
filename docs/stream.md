@@ -4,7 +4,7 @@
 
 `QueryStream` is responsible for turning parsed html nodes into meaningful data. You may pipe the output of any parser which uses the same output convention as [atlas-html-stream](https://github.com/atlassubbed/atlas-html-stream#readme) to an instance of `QueryStream`.
 
-The parsed data is analyzed on-the-fly inside your queries, and then forgotten; there is no data-persistence other than what you do in your queries. To better understand how `QueryStream` works, let's query a fraction of [../test/assets/app.html](./test/assets/app.html).
+The parsed data is analyzed on-the-fly inside your queries, and then forgotten; there is no data-persistence other than what you do in your queries. To better understand how `QueryStream` works, let's query a fraction of [../test/assets/app.html](../test/assets/app.html).
 
 ## querying fractions of a file
 
