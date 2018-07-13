@@ -20,7 +20,7 @@ I want to be able to query html files intuitively without needing the entire fil
 
 ## performance
 
-For a 25MB file, atlas-query-stream queries outspeed cheerio anywhere from 100-10000x (depending on the situation), in adition to using 100x less memory. [This article goes into more detail on the methods used.](./docs/perf.md)
+For a 25MB file, atlas-query-stream queries outspeed cheerio anywhere from 100-10000x (depending on the situation), in addition to using 100x less memory. [This article goes into more detail on the methods used.](./docs/perf.md)
 
 ## introduction
 
